@@ -223,11 +223,11 @@ async function sendClaudeRequest(request, response) {
         const useTools = Array.isArray(request.body.tools) && request.body.tools.length > 0;
         const useSystemPrompt = Boolean(request.body.use_sysprompt);
         const convertedPrompt = convertClaudeMessages(request.body.messages, request.body.assistant_prefill, useSystemPrompt, useTools, getPromptNames(request));
-        const useThinking = /^claude-(3-7|opus-4|sonnet-4|haiku-4-5|opus-4-5|opus-4-6)/.test(request.body.model);
-        const useWebSearch = /^claude-(3-5|3-7|opus-4|sonnet-4|haiku-4-5|opus-4-5|opus-4-6)/.test(request.body.model) && Boolean(request.body.enable_web_search);
-        const isLimitedSampling = /^claude-(opus-4-1|sonnet-4-5|haiku-4-5|opus-4-5|opus-4-6)/.test(request.body.model);
-        const useVerbosity = /^claude-(opus-4-5|opus-4-6)/.test(request.body.model);
-        const noPrefillModel = /^claude-(opus-4-6)/.test(request.body.model);
+        const useThinking = /^claude-(3-7|opus-4|sonnet-4|haiku-4-5|opus-4-5|opus-4-6|sonnet-4-6)/.test(request.body.model);
+        const useWebSearch = /^claude-(3-5|3-7|opus-4|sonnet-4|haiku-4-5|opus-4-5|opus-4-6|sonnet-4-6)/.test(request.body.model) && Boolean(request.body.enable_web_search);
+        const isLimitedSampling = /^claude-(opus-4-1|sonnet-4-5|haiku-4-5|opus-4-5|opus-4-6|sonnet-4-6)/.test(request.body.model);
+        const useVerbosity = /^claude-(opus-4-5|opus-4-6|sonnet-4-6)/.test(request.body.model);
+        const noPrefillModel = /^claude-(opus-4-6|sonnet-4-6)/.test(request.body.model);
         let fixThinkingPrefill = false;
         // Add custom stop sequences
         const stopSequences = [];
@@ -458,9 +458,10 @@ async function sendMakerSuiteRequest(request, response) {
             'gemini-2.5-flash-image-preview',
             'gemini-2.5-flash-image',
             'gemini-3-pro-image-preview',
+            'gemini-3.1-flash-image-preview',
         ];
 
-        const isThinkingConfigModel = m => (/^gemini-2.5-(flash|pro)/.test(m) && !/-image(-preview)?$/.test(m)) || (/^gemini-3-(flash|pro)/.test(m));
+        const isThinkingConfigModel = m => (/^gemini-2.5-(flash|pro)/.test(m) && !/-image(-preview)?$/.test(m)) || (/^gemini-3[.\d]*-(flash|pro)/.test(m));
         const isImageSizeModel = m => /^gemini-3/.test(m);
 
         const noSearchModels = [
@@ -1425,8 +1426,7 @@ async function sendElectronHubRequest(request, response) {
             console.debug('Electron Hub response:', generateResponseJson);
             return response.send(generateResponseJson);
         }
-    }
-    catch (error) {
+    } catch (error) {
         console.error('Error communicating with Electron Hub: ', error);
         if (!response.headersSent) {
             response.send({ error: true });
@@ -1527,8 +1527,7 @@ async function sendChutesRequest(request, response) {
             console.debug('Chutes response:', generateResponseJson);
             return response.send(generateResponseJson);
         }
-    }
-    catch (error) {
+    } catch (error) {
         console.error('Error communicating with Chutes: ', error);
         if (!response.headersSent) {
             response.send({ error: true });
@@ -1910,8 +1909,7 @@ router.post('/status', async function (request, statusResponse) {
                     console.warn('Chat Completion endpoint did not return a list of models.');
                 }
             }
-        }
-        else {
+        } else {
             console.error('Chat Completion status check failed. Either Access Token is incorrect or API endpoint is down.');
             statusResponse.send({ error: true, data: { data: [] } });
         }
@@ -2073,10 +2071,13 @@ router.post('/generate', async function (request, response) {
             apiKey = readSecret(request.user.directories, SECRET_KEYS.OPENROUTER);
             // OpenRouter needs to pass the Referer and X-Title: https://openrouter.ai/docs#requests
             headers = { ...OPENROUTER_HEADERS };
+            const includeReasoning = Boolean(request.body.include_reasoning);
             bodyParams = {
-                'transforms': getOpenRouterTransforms(request),
-                'plugins': getOpenRouterPlugins(request),
-                'include_reasoning': Boolean(request.body.include_reasoning),
+                transforms: getOpenRouterTransforms(request),
+                plugins: getOpenRouterPlugins(request),
+                reasoning: {
+                    exclude: !includeReasoning,
+                },
             };
 
             if (request.body.min_p !== undefined) {
@@ -2108,7 +2109,7 @@ router.post('/generate', async function (request, response) {
             }
 
             if (request.body.reasoning_effort) {
-                bodyParams['reasoning'] = { effort: request.body.reasoning_effort };
+                bodyParams['reasoning']['effort'] = request.body.reasoning_effort;
             }
 
             if (request.body.verbosity) {

@@ -278,12 +278,10 @@ async function discoverExtensions() {
         if (response.ok) {
             const extensions = await response.json();
             return extensions;
-        }
-        else {
+        } else {
             return [];
         }
-    }
-    catch (err) {
+    } catch (err) {
         console.error(err);
         return [];
     }
@@ -627,8 +625,7 @@ async function connectToApi(baseUrl) {
         }
 
         updateStatus(getExtensionsResult.ok);
-    }
-    catch {
+    } catch {
         updateStatus(false);
     }
 }
@@ -1390,7 +1387,7 @@ async function switchExtensionBranch(extensionName, isGlobal, branch) {
             return;
         }
 
-        toastr.success(t`Extension ${extensionName} switched to ${branch}`);
+        toastr.success(t`Extension ${extensionName} switched to ${branch}`, t`Reload the page to apply updates`);
         await loadExtensionSettings({}, false, false);
         void showExtensionsDetails();
     } catch (error) {
