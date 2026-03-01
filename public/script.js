@@ -2471,8 +2471,9 @@ export function addOneMessage(mes, { type = undefined, insertAfter = null, scrol
 
 
     //last_mes should always be updated.
-    chatElement.find('.mes').removeClass('last_mes');
-    chatElement.find('.mes').last().addClass('last_mes');
+    // Use targeted selector instead of scanning all .mes elements twice (O(n) → O(1)).
+    chatElement.find('.last_mes').removeClass('last_mes');
+    chatElement.children('.mes').last().addClass('last_mes');
 
     if (showSwipes) refreshSwipeButtons();
     // Don't scroll if not inserting last
@@ -9201,8 +9202,9 @@ export function updateEditArrowClasses() {
     const upButton = message.find('.mes_edit_up');
     const copyButton = message.find('.mes_edit_copy');
     const deleteButton = message.find('.mes_edit_delete');
-    const lastId = Number(chatElement.find('.mes').last().attr('mesid'));
-    const firstId = Number(chatElement.find('.mes').first().attr('mesid'));
+    // Use .last_mes marker and :first-child to avoid scanning every message (O(n) → O(1)).
+    const lastId = Number(chatElement.children('.last_mes').attr('mesid') ?? chatElement.children('.mes').last().attr('mesid'));
+    const firstId = Number(chatElement.children('.mes').first().attr('mesid'));
 
     copyButton.removeClass('disabled');
     deleteButton.removeClass('disabled');

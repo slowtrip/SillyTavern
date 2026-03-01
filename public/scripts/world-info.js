@@ -6172,7 +6172,8 @@ export function initWorldInfo() {
         }, { buttonStyle: true, closeDrawer: true });
     }
 
-    $('#WorldInfo').on('scroll', () => {
+    // Debounce to avoid iterating every world entry on each scroll pixel.
+    $('#WorldInfo').on('scroll', debounce(() => {
         $('.world_entry input[name="group"], .world_entry input[name="automationId"]').each((_, el) => {
             const instance = $(el).autocomplete('instance');
 
@@ -6180,5 +6181,5 @@ export function initWorldInfo() {
                 $(el).autocomplete('close');
             }
         });
-    });
+    }, debounce_timeout.short));
 }

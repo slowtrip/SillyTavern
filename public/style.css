@@ -871,6 +871,9 @@ body .panelControlBar {
     flex-direction: column;
     z-index: 30;
     flex-grow: 1;
+    /* Native momentum scroll on mobile; stops scroll chaining to body. */
+    touch-action: pan-y;
+    overscroll-behavior: contain;
 }
 
 #form_sheld {
@@ -1186,6 +1189,13 @@ body .panelControlBar {
     width: 100%;
     color: var(--SmartThemeBodyColor);
     position: relative;
+    /* Scope layout/style recalculation to each message instead of the whole document. */
+    contain: layout style;
+    /* Skip rendering of off-screen messages (browser-native virtual scroll).
+       contain-intrinsic-size gives the browser a height estimate so scroll position
+       stays stable while messages are not yet measured. */
+    content-visibility: auto;
+    contain-intrinsic-size: 0 120px;
 }
 
 #chat .mes.selected {

@@ -228,7 +228,9 @@
     }
 
     body {
-        touch-action: none;
+        /* manipulation: eliminates 300ms tap delay without blocking pan/pinch.
+           Was `none`, which prevented native scroll momentum everywhere. */
+        touch-action: manipulation;
         overflow: hidden;
         position: fixed;
     }
@@ -320,7 +322,9 @@
     #character_popup,
     #send_form {
         border: 1px solid var(--SmartThemeBorderColor);
-        backdrop-filter: blur(calc(var(--SmartThemeBlurStrength) * 2));
+        /* Was blur(... * 2) which doubled the user's blur setting on mobile. Normalize to 1×. */
+        backdrop-filter: blur(var(--SmartThemeBlurStrength));
+        -webkit-backdrop-filter: blur(var(--SmartThemeBlurStrength));
         max-width: 100dvw;
     }
 
@@ -331,7 +335,13 @@
         align-items: start;
         align-content: start;
         overflow-y: auto;
-        overflow-x: hidden
+        overflow-x: hidden;
+        /* Disable backdrop-filter on the scroll container for mobile.
+           Blurring the scrolling layer forces per-frame GPU compositing,
+           which is the leading cause of scroll jank on mobile.
+           The background-color already provides visual separation. */
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
     }
 
     .mes_buttons {
